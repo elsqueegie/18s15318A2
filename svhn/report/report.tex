@@ -40,6 +40,14 @@ This study is important because it draws a link between the cutting edge of mach
 \subsection{The Problem}
 The SVHN problem is similar to MNIST, in that the goal is to identify digits in images. However, the SVHN data adds a number of layers of complexity to the problem not present in MNIST. For one, SVHN contains data from real-world images, so there are complications such as lighting, angle, and possible obstruction. Secondly, a given SVHN data may contain multiple numbers in a single frame, and the classifier must identify which ones are noise, and which ones are the label.\\
 
+The classes are skewed, with certain numbers appearing much more frequently than others. This is to be expected, since the real-world prevalence of digits such as 1 would be much higher in the housenumbers scenario, as opposed to a digit like zero. This aspect of the data adds a further layer of complexity. The distribution of classes is shown below.
+\begin{figure}[h]
+\caption{Class distribution in the SVHN dataset}
+\centering
+\includegraphics[width=0.9\textwidth]{images/svhn_classes.png}
+\end{figure}
+
+
 There is an additional, optional layer of difficulty in this problem. The SVHN data is presented in two forms, firstly the raw, unzoomed snapshots from Google Street View, secondly a tightly cropped set of 32x32 images that centre the relevant number. The first form of the data is a much trickier problem in that a classifier must first preprocess the image to detect an unknown number of numbers with unknown positions. This additional layer will not be looked at in the model comparison, but touched on in further analysis.
 
 \subsection{Data Preprocessing}
@@ -60,15 +68,29 @@ Secondly, the data is run through a Principle Component Analysis (PCA). Reducing
 \end{figure}
 
 \subsection{Generalist Solutions: Support Vector Machines}
-The first classification approach used an SVM classifier on preprocessed data. Scikit-learn offers an out-of-the-box SVM classification tool, called SVC. There is some hyper-parameter tuning involved in fitting an SVC. For kernel selection, Gaussian methods outperform other variations for image classification\citep{svmkernels}, and for this reason the Gaussian Radial Basis Function (RBF) was selected. A Randomized Search was conducted on a 5000-row sample of the data to select the regularization parameter C, and the kernel coefficient gamma. Randomized search was chosen because it retains many benefits of Grid Search (simplicity in concept and implementation) while having high efficiency in high-dimensional search spaces.\\
+The first classification approach used an SVM classifier on preprocessed data. SVM was chosen because it has previously seen considerable success in image-recognition problems \citep{svmkernels}.\\
 
-After hyperparameter tuning, the algorithm was trained via k-fold cross validation with 10 folds. The holdout sets were scored, and those scores were combined to create the final scored dataset. Unfortunately, SVM solutions do not neatly return the probabilities that each observation belongs to a given class. Scikit-learn's solution offers a heuristic
+Scikit-learn offers an out-of-the-box SVM classification tool, called SVC. There is some hyper-parameter tuning involved in fitting an SVC. For kernel selection, Gaussian methods outperform other variations for image classification\citep{svmkernels}, and for this reason the Gaussian Radial Basis Function (RBF) was selected. A Randomized Search was conducted on a 5000-row sample of the data to select the regularization parameter C, and the kernel coefficient gamma. Randomized search was chosen because it retains many benefits of Grid Search (simplicity in concept and implementation) while having high efficiency in high-dimensional search spaces. This hyperparameter tuning ran in just under 3 minutes.\\
+
+After hyperparameter tuning, the algorithm was trained via k-fold cross validation with 10 folds. The holdout sets were scored, and those scores were combined to create the final scored dataset. The total 10-fold loop of the data took 93 minutes.\\
+
+Unfortunately, SVM solutions do not neatly return the probabilities that each observation belongs to a given class. Scikit-learn's solution offers a heuristic but using this would have blown out training times by a factor of ten, making the algorithm unfeasible. As such, not all metrics could be calculated for the SVM solution.
 
 
 \subsection{Generalist Solutions: Random Forest}
 The second classification approach used a Random Forest (RF) algorithm. RF models are an ensemble of decision trees, which separate the data by splitting on features which best segment out distinct classes. Each tree being exposed to a subset of features. This structure means that the model automatically regularizes well, since no tree has the opportunity to learn the data. \\
 
-RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Once optimal values of hyperparameters were determined, the algorithm was trained via 10-fold cross validation, with hold-out sets combined into the results dataset.
+The RF model was exposed to data that had been preprocessed first via greyscale and secondly with PCA to reduce the dimensionality and extract key features. This was possible because, like SVMs and unlike CNNs, RF models don't depend on a 2D image construct.\\
+
+RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Even though this subset was small, the evaluation of hyperparameters still took a very long time, running for 32 minutes. The results of the search are displayed in figure 4:\\
+\begin{figure}[h]
+\caption{Random Forest performance against tree count and depth: Darker is better}
+\centering
+\includegraphics[width=0.9\textwidth]{images/random_forest_hyperparams.png}
+\end{figure}
+
+
+Once optimal values of hyperparameters were determined, the algorithm was trained via 10-fold cross validation, with hold-out sets combined into the results dataset. Training occurred remarkably quickly, with only 15 minutes required to complete all 10 folds. Furthermore, the RF solution allowed not only for the predictions but the model's estimated probability of each class.
 
 \subsection{Specialist Solutions: Convolution Neural Network}
 The final classification approach was a Convolutional Neural Network (CNN), a machine-learning algorithm adapted specifically for image classification tasks. CNNs consist of a number of trainable layers that fall into the following categories:
@@ -84,22 +106,55 @@ In order to generalise the solution, both drop-out and l2 regularization techniq
 
 The full set of hyperparameters to be tuned in the neural network is:
 \begin{itemize}
-\item Batch size
-\item Network architecture (including number of layers, type of layer, filters/neurons per layer)
-\item Dropout
-\item L2 regularization
-\item Learning rate
-\item Number of iterations
+\item Batch size - how many observations exposed to the network at each iteration
+\item Network architecture - such as  number of layers, type of layer, filters/neurons per layer
+\item Dropout - the probability that a given node be switched off in training
+\item L2 regularization - the strength of the penalty applied to coefficients
+\item Learning rate - the rate of gradient descent the network employs
+\item Number of iterations - how many batches the network will see in training
 \end{itemize}
 
-These were all adjusted manually by observing network performance on out-of-sample data as hyperparameters were tweaked. After tuning, a K-fold cross validation was performed on the training dataset. Performance on the holdout set is explored in the results section. The in-sample performance was tracked to see the performance of the AdamOptimizer algorithm. This is shown below:
+Unfortunately, there is no easy solution to the general problem of tuning Neural Network hyperparameters, as the search space is high-dimensional and also not continuous. Initial estimates were based on a mixture of sensible estimates and literature \citep{nnoptim}. Hences, these were all adjusted manually by observing network performance on out-of-sample data as hyperparameters were tweaked. This was sense-checked by confirming that out-of-sample performance reflected in-sample checks. 
+
+After tuning, a K-fold cross validation was performed on the training dataset. Performance on the holdout set is explored in the results section. The in-sample performance was tracked to see the performance of the AdamOptimizer algorithm. This is shown below:
 
 \begin{figure}[h]
 \caption{CNN in-sample performance by iteration (the average is given in black)}
 \centering
 \includegraphics[width=0.9\textwidth]{images/training-progress.png}
 \end{figure}
- 
+
+\section{Experiments and Discussion}
+\subsection{Results and Comparison}
+
+The accuracy achieved in the K-fold cross validation exercise was 64.65\% for RF, 79.54\% for SVM and 84.55\% for CNN. A full breakdown of results achieved by each algorithm is given in the table below:
+\begin{center}
+\begin{tabular}{ c c c c c }
+ Algorithm & Precision & Recall & F1 Score & Accuracy\\ 
+ RF & 0.68 & 0.64 & 0.63 & 0.64 \\  
+SVM & 0.80 & 0.80 & 0.79 & 0.80\\
+CNN & 0.84 & 0.84 & 0.84 & 0.85                    
+\end{tabular}
+\end{center}
+
+These results were expected, and are in line with the optimization of each algorithm to the problem.They also reflect the time taken to achieve these results. The RF model was surprisingly quick to train, with all folds completed in 15 minutes. SVM took much longer, at 93 minutes, and CNN took the longest at 210 minutes.\\
+
+These results neatly illustrate the resource cost of performance as more sophisticated techniques are implemented. However, if the dataset were to increase, this relationship might not hold. The cost of training an SVM model increases exponentially with the data at $O(n^2)$ when the cost of errors is small, and $O(n^3)$ when cost of errors is large \citep{algoperformance}. By contrast, neural networks scale linearly due to the batching technique. While the SVM model trained quicker than the CNN, this might not reflect performance on larger datasets.\\
+
+The confusion matrix of each classifier shows its strengths and weaknesses.
+\begin{figure}[h]
+\caption{The Confusion Matrix for each classifier}
+\centering
+\includegraphics[width=0.9\textwidth]{images/cm_all.png}
+\end{figure}
+
+The confusion matrices are in sync with the accuracy results outlined previously. 
+
+\subsection{Further Analysis}
+
+\section{Conclusion}
+
+
 \medskip
  
 % To change the title from References to Bibliography:
