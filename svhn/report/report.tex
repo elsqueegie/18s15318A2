@@ -62,10 +62,13 @@ Secondly, the data is run through a Principle Component Analysis (PCA). Reducing
 \subsection{Generalist Solutions: Support Vector Machines}
 The first classification approach used an SVM classifier on preprocessed data. Scikit-learn offers an out-of-the-box SVM classification tool, called SVC. There is some hyper-parameter tuning involved in fitting an SVC. For kernel selection, Gaussian methods outperform other variations for image classification\citep{svmkernels}, and for this reason the Gaussian Radial Basis Function (RBF) was selected. A Randomized Search was conducted on a 5000-row sample of the data to select the regularization parameter C, and the kernel coefficient gamma. Randomized search was chosen because it retains many benefits of Grid Search (simplicity in concept and implementation) while having high efficiency in high-dimensional search spaces.\\
 
-After hyperparameter tuning, the algorithm was trained via k-fold cross validation with 10 folds. The holdout sets were scored, and those scores were combined to create the
+After hyperparameter tuning, the algorithm was trained via k-fold cross validation with 10 folds. The holdout sets were scored, and those scores were combined to create the final scored dataset. Unfortunately, SVM solutions do not neatly return the probabilities that each observation belongs to a given class. Scikit-learn's solution offers a heuristic
 
 
 \subsection{Generalist Solutions: Random Forest}
+The second classification approach used a Random Forest (RF) algorithm. RF models are an ensemble of decision trees, which separate the data by splitting on features which best segment out distinct classes. Each tree being exposed to a subset of features. This structure means that the model automatically regularizes well, since no tree has the opportunity to learn the data. \\
+
+RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Once optimal values of hyperparameters were determined, the algorithm was trained via 10-fold cross validation, with hold-out sets combined into the results dataset.
 
 \subsection{Specialist Solutions: Convolution Neural Network}
 The final classification approach was a Convolutional Neural Network (CNN), a machine-learning algorithm adapted specifically for image classification tasks. CNNs consist of a number of trainable layers that fall into the following categories:
@@ -89,8 +92,13 @@ The full set of hyperparameters to be tuned in the neural network is:
 \item Number of iterations
 \end{itemize}
 
-These were all adjusted manually by observing network performance on out-of-sample data as hyperparameters were tweaked. After tuning, a K-fold cross validation was performed on the training dataset. Performance is explored in the results section.
+These were all adjusted manually by observing network performance on out-of-sample data as hyperparameters were tweaked. After tuning, a K-fold cross validation was performed on the training dataset. Performance on the holdout set is explored in the results section. The in-sample performance was tracked to see the performance of the AdamOptimizer algorithm. This is shown below:
 
+\begin{figure}[h]
+\caption{CNN in-sample performance by iteration (the average is given in black)}
+\centering
+\includegraphics[width=0.9\textwidth]{images/training-progress.png}
+\end{figure}
  
 \medskip
  
