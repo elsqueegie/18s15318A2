@@ -82,7 +82,8 @@ The second classification approach used a Random Forest (RF) algorithm. RF model
 
 The RF model was exposed to data that had been preprocessed first via greyscale and secondly with PCA to reduce the dimensionality and extract key features. This was possible because, like SVMs and unlike CNNs, RF models don't depend on a 2D image construct.\\
 
-RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Even though this subset was small, the evaluation of hyperparameters still took a very long time, running for 32 minutes. The results of the search are displayed in figure 4:\\
+RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Even though this subset was small, the evaluation of hyperparameters still took a very long time, running for 32 minutes. The results of the search are displayed in figure 4.  Due to the highly imbalanced classes, the class\_weight parameter was set to 'balanced', forcing the algorithm to draw class weights from the data. This was a good solution because the distribution of the test data matches the distribution of training data in K-fold due to the shuffling of the data.
+\\
 \begin{figure}[h]
 \caption{Random Forest performance against tree count and depth: Darker is better}
 \centering
@@ -116,13 +117,15 @@ The full set of hyperparameters to be tuned in the neural network is:
 
 Unfortunately, there is no easy solution to the general problem of tuning Neural Network hyperparameters, as the search space is high-dimensional and also not continuous. Initial estimates were based on a mixture of sensible estimates and literature \citep{nnoptim}. Hences, these were all adjusted manually by observing network performance on out-of-sample data as hyperparameters were tweaked. This was sense-checked by confirming that out-of-sample performance reflected in-sample checks. 
 
-After tuning, a K-fold cross validation was performed on the training dataset. Performance on the holdout set is explored in the results section. The in-sample performance was tracked to see the performance of the AdamOptimizer algorithm. This is shown below:
+After tuning, a K-fold cross validation was performed on the training dataset. While K-fold is not usually done with neural networks \citep{nnoptim}, it was done in order to keep results comparable to the other algorithms. The in-sample performance was tracked to see the performance of the AdamOptimizer algorithm. This is shown in figure 5:\\
 
 \begin{figure}[h]
 \caption{CNN in-sample performance by iteration (the average is given in black)}
 \centering
 \includegraphics[width=0.9\textwidth]{images/training-progress.png}
 \end{figure}
+
+Running the optimization further did not improve out-of-sample performance, and increased an already-substantial training time.
 
 \section{Experiments and Discussion}
 \subsection{Results and Comparison}
@@ -141,19 +144,29 @@ These results were expected, and are in line with the optimization of each algor
 
 These results neatly illustrate the resource cost of performance as more sophisticated techniques are implemented. However, if the dataset were to increase, this relationship might not hold. The cost of training an SVM model increases exponentially with the data at $O(n^2)$ when the cost of errors is small, and $O(n^3)$ when cost of errors is large \citep{algoperformance}. By contrast, neural networks scale linearly due to the batching technique. While the SVM model trained quicker than the CNN, this might not reflect performance on larger datasets.\\
 
-The confusion matrix of each classifier shows its strengths and weaknesses.
+The confusion matrix of each classifier shows its strengths and weaknesses when it deals with particular classes. The values of the squares are out of a total of 100\%, determined what share of the label's prevalence (not prediction) is in that square.\\
 \begin{figure}[h]
 \caption{The Confusion Matrix for each classifier}
 \centering
 \includegraphics[width=0.9\textwidth]{images/cm_all.png}
 \end{figure}
 
-The confusion matrices are in sync with the accuracy results outlined previously. 
+The confusion matrices are in sync with the accuracy results outlined previously. CNN has a marginally better confusion matrix than SVM, while RF lags behind both. Interestingly, it looks as though a lot of RF's error comes from the balance issues in the dataset. The overrepresentation of '1' in the data has hampered the precision on that class but greatly increased the recall. This comes at the cost of recall for other classes. This is despite the setting of the class\_weight hyperparameter to 'balanced', and might suggest that hyperparameter is not sufficiently accounting for class imbalance.\\
+
+From this analysis, it is clear that CNN is the best classifier for this problem, followed by SVM and RF.
+
 
 \subsection{Further Analysis}
 
+The findings in the above section correspond with the literature on this problem. The top-performing models on the SVHN dataset are predominantly Convolutional Neural Networks \citep{problemperformance}. Furthermore, Deep Learning implementations dominate the leaderboards of MNIST, CIFAR-10, CIFAR-100 and STL-10 classification problems.
+
+However, despite this finding, this study was unable to replicate the success of the above neural networks without blowing out the number of layers and parameters. For example, the top-performing network found has convolution layers of 128, 128, 320, 320, 384 and 384 channels, and pooling layers of 96, 256, 256 channels. In contrast, this study uses a network of 16,32,64,128 convolutional layers with pooling occurring within those layers. The additional complexity of the cited solution would have increased training times to unacceptable levels.
+
+
+
 \section{Conclusion}
 
+It is true that once trained, scoring a neural network is relatively trivial. However, replicating the creation of remarkable neural networks is dependent on one's access to similarly remarkable computing resources. The conclusion of this observation is that while academia has made great strides in the image classification field, the capabilities unlocked are only at the disposal of entities with significant resources at their disposal.
 
 \medskip
  
