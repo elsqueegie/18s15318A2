@@ -78,9 +78,9 @@ Unfortunately, SVM solutions do not neatly return the probabilities that each ob
 
 
 \subsection{Generalist Solutions: Random Forest}
-The second classification approach used a Random Forest (RF) algorithm. RF models are an ensemble of decision trees, which separate the data by splitting on features which best segment out distinct classes. Each tree being exposed to a subset of features. This structure means that the model automatically regularizes well, since no tree has the opportunity to learn the data. \\
+The second classification approach used a Random Forest (RF) algorithm. RF models are an ensemble of decision trees, which separate the data by splitting on features which best segment out distinct classes. Each tree is only exposed to a subset of features, which is chosen at random \citep{rfimages}. This structure means that the model automatically regularizes well, since no tree has the opportunity to learn the data. Additionally, the non-linearity of RF models mean that they can capture effects that are hidden from linear models, such as by splitting more than once on a given feature, and also automatically include cross-product effects. \\
 
-The RF model was exposed to data that had been preprocessed first via greyscale and secondly with PCA to reduce the dimensionality and extract key features. This was possible because, like SVMs and unlike CNNs, RF models don't depend on a 2D image construct.\\
+The RF model was exposed to data that had been preprocessed firstly via greyscale and secondly with PCA to reduce the dimensionality and extract key features. This was possible because, like SVMs and unlike CNNs, RF models don't depend on a 2D image construct.\\
 
 RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Even though this subset was small, the evaluation of hyperparameters still took a very long time, running for 32 minutes. The results of the search are displayed in figure 4.  Due to the highly imbalanced classes, the class\_weight parameter was set to 'balanced', forcing the algorithm to draw class weights from the data. This was a good solution because the distribution of the test data matches the distribution of training data in K-fold due to the shuffling of the data.
 \\
