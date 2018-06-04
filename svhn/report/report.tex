@@ -27,7 +27,7 @@ This paper compares the performance of different machine learning algorithms on 
 
 \section{Introduction}
  
-Machine learning has demonstrated reliable, accurate performance in image recognition tasks. On datasets such as MNIST, simple neural networks can achieve over 99\% accuracy \citep{tfmnist}. High performance is being achieved in other, more practical problems. The Street View House Numbers dataset (SVHN) is a series of labelled images depicting house numbers taken from google images. The dataset has been cropped to centre the relevant number in a 1024 pixel square image. The training set comprises 73,257 and the validation set contains a further 26,032 images. Training is conducted via cross-validation, but performance is determined by the accuracy achieved both on the kfold hold-out and the separate, hold-out validation set. Supplementary metrics will be similarly explored in further analysis.\\
+Machine learning has demonstrated reliable, accurate performance in image recognition tasks. On datasets such as MNIST, simple neural networks can achieve over 99\% accuracy \citep{tfmnist}. High performance is being achieved in other, more practical problems. The Street View House Numbers dataset (SVHN) is a series of labelled images depicting house numbers taken from google images \citep{svhn}. The data is available at http://ufldl.stanford.edu/housenumbers/ . The dataset has been cropped to centre the relevant number in a 1024 pixel square image. The training set comprises 73,257 and the validation set contains a further 26,032 images. Training is conducted via cross-validation, but performance is determined by the accuracy achieved both on the kfold hold-out and the separate, hold-out validation set. Supplementary metrics will be similarly explored in further analysis.\\
 
 The purpose of this study is twofold: firstly, to compare the performance of newer, specialist methods of image classification against that of more generalist algorithms. The generalist algorithms used are Support Vector Machines (SVM) and Random Forest (RF), and are 'generalist' in the sense that they have no special image recognition preprocessing. The specialist method is a Convolutional Neural Network (CNN), with two permutations. The first involves 'vanilla' CNN that stacks convolutional layers and fully-connected layers. The second permutation first uses a K-means clustering implementation to construct features, and feeds those features to a CNN for enhanced performance. This study will investigate the performance uplift of specialist methods over generalist methods.\\
 
@@ -86,7 +86,7 @@ The second classification approach used a Random Forest (RF) algorithm. RF model
 
 The RF model was exposed to data that had been preprocessed firstly via greyscale and secondly with PCA to reduce the dimensionality and extract key features. This was possible because, like SVMs and unlike CNNs, RF models don't depend on a 2D image construct.\\
 
-RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Even though this subset was small, the evaluation of hyperparameters still took a very long time, running for 32 minutes. The results of the search are displayed in figure \ref{img:rfhp}.  Due to the highly imbalanced classes, the class\_weight parameter was set to 'balanced', forcing the algorithm to draw class weights from the data. This was a good solution because the distribution of the test data matches the distribution of training data in K-fold due to the shuffling of the data.\\
+RF models have some hyperparameters that require tuning, namely max tree depth and total number of trees. These were tuned on a small, 2000-row sample of the data. Even though this subset was small, the evaluation of hyperparameters still took a very long time, running for 32 minutes. The results of the search are displayed in figure \ref{img:rfhp}.  Due to the highly imbalanced classes, the class\_weight parameter was set to 'balanced', forcing the algorithm to draw class weights from the data. This was a good solution because the distribution of the test data matches the distribution of training data in K-fold due to the shuffling of the data, and raised out-of-sample accuracy by 3\%.\\
 
 \begin{figure}[h]
   \caption{Random Forest performance against tree count and depth: Darker is better}
@@ -137,11 +137,11 @@ Running the optimization further did not improve out-of-sample performance, and 
 \section{Experiments and Discussion}
 \subsection{Results and Comparison}
 
-The accuracy achieved in the K-fold cross validation exercise was 64.65\% for RF, 79.54\% for SVM and 85.62\% for CNN. A full breakdown of results achieved by each algorithm is given in the table below:\\
+The accuracy achieved in the K-fold cross validation exercise was 67.05\% for RF, 79.54\% for SVM and 85.62\% for CNN. A full breakdown of results achieved by each algorithm is given in the table below:\\
 \begin{center}
 \begin{tabular}{ c c c c c }
  Algorithm & Precision & Recall & F1 Score & Accuracy\\ 
- RF & 0.68 & 0.64 & 0.63 & 0.64 \\  
+ RF & 0.71 & 0.67 & 0.67 & 0.67 \\  
 SVM & 0.80 & 0.80 & 0.79 & 0.80\\
 CNN & 0.86 & 0.86 & 0.86 & 0.86                    
 \end{tabular}
@@ -212,10 +212,40 @@ This study leads naturally to some next steps. There are important aspects of th
 \medskip
 \newpage
 
-% To change the title from References to Bibliography:
+\appendix
+\section{Appendix A: Running the code}
+The Code will run in a basic Anaconda environment with proper dependencies. For a full list of packages used, please see the code. The key environment variables are listed below:
+\begin{itemize}
+  \item Python 3.6
+  \item Tensorflow
+  \item Keras
+\end{itemize}
+
+There are four ipython notebooks that are broken out into different parts of the assignment. These notebooks can be loaded in a jupyter environment and cells executed sequentially (please make sure data is present where required). Alternatively, they can be converted to .py scripts and run via Ipython the command line. Both the python files and the jupyter notebooks have been provided.
+\begin{itemize}
+  \item SVM\_and\_RandomForest.ipynb is the code behind the SVM and Random Forest models.
+  \item CNN\_SVHN.ipynb is the code behind the CNN implementation.
+  \item Model\_Comparison.ipynb reads the outputs of the first two files for evaluation and compariso
+  \item Convolutional\_K\_means.ipynb further explores the multiple-label classification problem
+\end{itemize}
+
+
+
+\section{Appendix B: Contributions by individual}
+The individual contributions are as follows:
+\begin{itemize}
+  \item James Macdonald: Report writing, visualization and CNN implementation
+  \item Sahar Nourazar: RF and SVM implementations
+  \item Sajith Kumar: Convolutional Kmeans implementation
+\end{itemize}
+
+
+\newpage
 \renewcommand\refname{Bibliography}
 
-\bibliographystyle{unsrtnat} % or try abbrvnat or unsrtnat
-\bibliography{references} % refers to example.bib
- 
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+
+
 \end{document}
